@@ -1,9 +1,0 @@
-#ignore dependencies
-_deps/
-
-#ignore executables
-*.out
-
-#ignore cmake
-*.cmake
-Makefile CMakeCache.txt
