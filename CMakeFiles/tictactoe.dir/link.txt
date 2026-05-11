@@ -1,1 +1,0 @@
-/usr/bin/c++ -Wl,--dependency-file=CMakeFiles/tictactoe.dir/link.d CMakeFiles/tictactoe.dir/src/main.cpp.o -o tictactoe  _deps/raylib-build/raylib/libraylib.a -lpthread /usr/lib/libOpenGL.so /usr/lib/libGLX.so /usr/lib/libGLU.so /usr/lib/librt.a -lm -ldl -lm /usr/lib/libSM.so /usr/lib/libICE.so /usr/lib/libX11.so /usr/lib/libXext.so -lgcc_s_asneeded -lgcc_s_asneeded
