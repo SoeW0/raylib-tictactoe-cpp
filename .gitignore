@@ -3,8 +3,11 @@ _deps/
 
 #ignore executables
 *.out
+output
+tictactoe
 
 #ignore cmake
+CMakeFiles/
 *.cmake
 Makefile
 CMakeCache.txt
