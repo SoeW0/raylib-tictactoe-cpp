@@ -2,8 +2,8 @@
 #include <array>
 #include <optional>
 
-constexpr int CELLWIDTH = 3;
 constexpr int CELLHEIGHT = 3;
+constexpr int CELLWIDTH = 3;
 
 //Cell state that holds special values
 enum struct CellState {
@@ -33,33 +33,33 @@ void CreateGrid(Grid& grid) {
   float PosX = 250;
   float PosY = 100;
 
-  for(int row = 0; row < CELLWIDTH; row++) {
-    for(int col = 0; col < CELLHEIGHT; col++) {
+  for(int col = 0; col < CELLHEIGHT; col++) {
+    for(int row = 0; row < CELLWIDTH; row++) {
       float px = PosX + row * (size + padding);
       float py = PosY + col * (size + padding);
 
-      grid[row][col].state = CellState::Empty;
-      grid[row][col].rects = { px, py, size, size};
+      grid[col][row].state = CellState::Empty;
+      grid[col][row].rects = { px, py, size, size};
     }
   }
 }
 
 //Draw the grid of rectangles
 void DrawRecGrid(const Grid& grid) {
-  for(int row = 0; row < CELLWIDTH; row++) {
-    for(int col = 0; col < CELLHEIGHT; col++) {
-      DrawRectangleRec(grid[row][col].rects, RAYWHITE);
-      DrawRectangleLinesEx(grid[row][col].rects, 5, GRAY);
+  for(int col = 0; col < CELLHEIGHT; col++) {
+    for(int row = 0; row < CELLWIDTH; row++) {
+      DrawRectangleRec(grid[col][row].rects, RAYWHITE);
+      DrawRectangleLinesEx(grid[col][row].rects, 5, GRAY);
     }
   }
 }
 
 //Gets pointer and rect collision on hover
 std::optional<CellPos> GetCollisionHover(const Grid& grid, Vector2 pointer) {
-  for(int row = 0; row < CELLWIDTH; row++) {
-    for(int col = 0; col < CELLHEIGHT; col++) {
-      if(CheckCollisionPointRec(pointer, grid[row][col].rects)) {
-        return CellPos { row, col };
+  for(int col = 0; col < CELLHEIGHT; col++) {
+    for(int row = 0; row < CELLWIDTH; row++) {
+      if(CheckCollisionPointRec(pointer, grid[col][row].rects)) {
+        return CellPos { col, row };
       }
     }
   }
@@ -67,22 +67,22 @@ std::optional<CellPos> GetCollisionHover(const Grid& grid, Vector2 pointer) {
 }
 
 //A function to draw the symbols inside the selected rectangle permanently
-void DrawSymbol(Grid& grid) {
-  for(int row = 0; row < CELLWIDTH; row++) {
-    for(int col = 0; col < CELLHEIGHT; col++) {
-      int x = grid[row][col].rects.x;
-      int y = grid[row][col].rects.y;
-      if(grid[row][col].state == CellState::X) DrawText("X", x + 20, y + 5, 100, BLACK);
-      if(grid[row][col].state == CellState::O) DrawText("O", x + 20, y + 5, 100, BLACK);
+void DrawSymbol(const Grid& grid) {
+  for(int col = 0; col < CELLHEIGHT; col++) {
+    for(int row = 0; row < CELLWIDTH; row++) {
+      int x = grid[col][row].rects.x;
+      int y = grid[col][row].rects.y;
+      if(grid[col][row].state == CellState::X) DrawText("X", x + 20, y + 5, 100, BLACK);
+      if(grid[col][row].state == CellState::O) DrawText("O", x + 20, y + 5, 100, BLACK);
     }
   }
 }
 
 //Changes the cellstate given a position
-void ChangeState(CellPos pos, Grid& grid, char mark) {
-  if(grid[pos.y][pos.x].state == CellState::Empty && mark == 'X') {
+void ChangeState(CellPos pos, Grid& grid, CellState state) {
+  if(grid[pos.y][pos.x].state == CellState::Empty && state == CellState::X) {
     grid[pos.y][pos.x].state = CellState::X;
-  } else if(grid[pos.y][pos.x].state == CellState::Empty && mark == 'O') {
+  } else if(grid[pos.y][pos.x].state == CellState::Empty && state == CellState::O) {
     grid[pos.y][pos.x].state = CellState::O;
   }
 }
@@ -95,8 +95,8 @@ void RecInteract(Grid& grid, Vector2 pointer) {
 
     Rectangle HoveredRects = grid[Cps.y][Cps.x].rects;
     DrawRectangleLinesEx(HoveredRects, 10, BLUE);
-    if(IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) ChangeState(*hover, grid, 'X');
-    if(IsMouseButtonPressed(MOUSE_RIGHT_BUTTON)) ChangeState(*hover, grid, 'O');
+    if(IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) ChangeState(*hover, grid, CellState::X);
+    if(IsMouseButtonPressed(MOUSE_RIGHT_BUTTON)) ChangeState(*hover, grid, CellState::O);
   }
 }
 
@@ -118,7 +118,7 @@ int main() {
     BeginDrawing();
     Vector2 pointer = GetMousePosition();
     ClearBackground(BLACK);
-    DrawText("Tic-Tac-Toe", halfScreenWidth - 10, halfScreenHeight - 200, 20, GRAY);
+    DrawText("Tic-Tac-Toe", halfScreenWidth - 60, halfScreenHeight - 200, 20, GRAY);
 
     DrawRecGrid(grid);
     RecInteract(grid, pointer);
