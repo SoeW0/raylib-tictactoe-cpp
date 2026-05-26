@@ -5,6 +5,17 @@
 constexpr int CELLHEIGHT = 3;
 constexpr int CELLWIDTH = 3;
 
+//Game State
+enum struct GameState {
+  Playing,
+  GameEnd
+};
+
+enum struct CanMark {
+  canMark,
+  cannotMark
+};
+
 //Cell state that holds special values
 enum struct CellState {
   X,
@@ -19,8 +30,8 @@ struct Cell {
 };
 
 struct CellPos {
-  int y;
-  int x;
+  size_t y;
+  size_t x;
 };
 
 //alias for the grid array
@@ -56,8 +67,8 @@ void DrawRecGrid(const Grid& grid) {
 
 //Gets pointer and rect collision on hover
 std::optional<CellPos> GetCollisionHover(const Grid& grid, Vector2 pointer) {
-  for(int col = 0; col < CELLHEIGHT; col++) {
-    for(int row = 0; row < CELLWIDTH; row++) {
+  for(size_t col = 0; col < CELLHEIGHT; col++) {
+    for(size_t row = 0; row < CELLWIDTH; row++) {
       if(CheckCollisionPointRec(pointer, grid[col][row].rects)) {
         return CellPos { col, row };
       }
@@ -95,9 +106,38 @@ void RecInteract(Grid& grid, Vector2 pointer) {
 
     Rectangle HoveredRects = grid[Cps.y][Cps.x].rects;
     DrawRectangleLinesEx(HoveredRects, 10, BLUE);
-    if(IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) ChangeState(*hover, grid, CellState::X);
-    if(IsMouseButtonPressed(MOUSE_RIGHT_BUTTON)) ChangeState(*hover, grid, CellState::O);
+    if(IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) ChangeState(*hover, grid, CellState::O);
   }
+}
+
+//Opponent/Simple AI
+/*------------------------------------------------*/
+
+//Checks valid positions for mark placement
+std::optional<CellPos> CheckValidMarkPos(const Grid& grid) {
+  for(size_t y = 0; y < grid.size(); y++) {
+    for(size_t x = 0; x < grid.size(); x++) {
+      if(grid[y][x].state == CellState::Empty) {
+        return CellPos { y, x };
+      }
+    }
+  }
+  return std::nullopt;
+}
+
+//AI position function
+void Opponent(Grid& grid) {
+  CellState mark = CellState::X;
+  CellPos startPos { 1, 1 };
+  auto cellMarkPos = CheckValidMarkPos(grid);
+
+  ChangeState(startPos, grid, mark);
+  ChangeState(*cellMarkPos, grid, mark);
+}
+
+//Function that handles turns
+void GameTurns() {
+
 }
 
 int main() {
@@ -110,6 +150,7 @@ int main() {
   InitWindow(ScreenWidth, ScreenHeight, "Tic-Tac-Toe");
 
   Grid grid;
+  GameState gameState = GameState::Playing;
 
   CreateGrid(grid);
 
@@ -119,9 +160,11 @@ int main() {
     Vector2 pointer = GetMousePosition();
     ClearBackground(BLACK);
     DrawText("Tic-Tac-Toe", halfScreenWidth - 60, halfScreenHeight - 200, 20, GRAY);
+    //Rectangle gameButton = DrawGameStartButton(halfScreenWidth, halfScreenHeight, grid);
 
     DrawRecGrid(grid);
     RecInteract(grid, pointer);
+    //Opponent(grid);
     DrawSymbol(grid);
 
     EndDrawing(); 
