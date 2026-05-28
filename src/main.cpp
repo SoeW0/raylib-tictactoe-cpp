@@ -1,6 +1,7 @@
 #include "raylib.h"
 #include <array>
 #include <optional>
+#include <cstdlib>
 
 constexpr int CELLHEIGHT = 3;
 constexpr int CELLWIDTH = 3;
@@ -32,6 +33,18 @@ struct Cell {
 struct CellPos {
   size_t y;
   size_t x;
+};
+
+struct Player {
+  CanMark mark;
+  bool alreadyMarked;
+  bool hasWon;
+};
+
+struct Enemy {
+  CanMark mark;
+  bool alreadyMarked;
+  bool hasWon;
 };
 
 //alias for the grid array
@@ -99,14 +112,17 @@ void ChangeState(CellPos pos, Grid& grid, CellState state) {
 }
 
 //Pointer interactivity
-void RecInteract(Grid& grid, Vector2 pointer) {
+void RecInteract(Grid& grid, Vector2 pointer, Player& player) {
   auto hover = GetCollisionHover(grid, pointer);
   if(hover.has_value()) {
     CellPos Cps = hover.value();
 
     Rectangle HoveredRects = grid[Cps.y][Cps.x].rects;
     DrawRectangleLinesEx(HoveredRects, 10, BLUE);
-    if(IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) ChangeState(*hover, grid, CellState::O);
+    if(IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+      ChangeState(*hover, grid, CellState::O);
+      player.alreadyMarked = true;
+    }
   }
 }
 
@@ -125,18 +141,60 @@ std::optional<CellPos> CheckValidMarkPos(const Grid& grid) {
   return std::nullopt;
 }
 
+
 //AI position function
-void Opponent(Grid& grid) {
-  CellState mark = CellState::X;
-  CellPos startPos { 1, 1 };
+void Opponent(Grid& grid, Enemy& enemy) {
+  CellState cellMark = CellState::X;
   auto cellMarkPos = CheckValidMarkPos(grid);
 
-  ChangeState(startPos, grid, mark);
-  ChangeState(*cellMarkPos, grid, mark);
+  if(cellMarkPos.has_value()) ChangeState(*cellMarkPos, grid, cellMark);
+  enemy.alreadyMarked = true;
 }
 
-//Function that handles turns
-void GameTurns() {
+void gameTurn(Player& player, Enemy& enemy) {
+  if(enemy.alreadyMarked == true) {
+    enemy.mark = CanMark::cannotMark;
+    enemy.alreadyMarked = false;
+
+    player.mark = CanMark::canMark;
+  }
+  if(player.alreadyMarked == true) {
+    player.mark = CanMark::cannotMark;
+    player.alreadyMarked = false;
+
+    enemy.mark = CanMark::canMark;
+  }
+}
+
+//function that checks if there is a win
+void winCondition(const Grid& grid, Enemy& enemy, Player& player) {
+  //Checks player mark horizontally
+  if(grid[0][0].state == CellState::O && grid[0][1].state == CellState::O && grid[0][2].state == CellState::O) player.hasWon = true;
+  if(grid[1][0].state == CellState::O && grid[1][1].state == CellState::O && grid[1][2].state == CellState::O) player.hasWon = true;
+  if(grid[2][0].state == CellState::O && grid[2][1].state == CellState::O && grid[2][2].state == CellState::O) player.hasWon = true;
+
+  //Checks player mark vertically
+  if(grid[0][0].state == CellState::O && grid[1][0].state == CellState::O && grid[2][0].state == CellState::O) player.hasWon = true;
+  if(grid[0][1].state == CellState::O && grid[1][1].state == CellState::O && grid[2][1].state == CellState::O) player.hasWon = true;
+  if(grid[0][2].state == CellState::O && grid[1][2].state == CellState::O && grid[2][2].state == CellState::O) player.hasWon = true;
+
+  //Checks player mark diagonally
+  if(grid[0][0].state == CellState::O && grid[1][1].state == CellState::O && grid[2][2].state == CellState::O) player.hasWon = true;
+  if(grid[0][2].state == CellState::O && grid[1][1].state == CellState::O && grid[2][0].state == CellState::O) player.hasWon = true;
+
+  //Checks enemy mark horizontally
+  if(grid[0][0].state == CellState::X && grid[0][1].state == CellState::X && grid[0][2].state == CellState::X) enemy.hasWon = true;
+  if(grid[1][0].state == CellState::X && grid[1][1].state == CellState::X && grid[1][2].state == CellState::X) enemy.hasWon = true;
+  if(grid[2][0].state == CellState::X && grid[2][1].state == CellState::X && grid[2][2].state == CellState::X) enemy.hasWon = true;
+
+  //Checks enemy mark vertically
+  if(grid[0][0].state == CellState::X && grid[1][0].state == CellState::X && grid[2][0].state == CellState::X) enemy.hasWon = true;
+  if(grid[0][1].state == CellState::X && grid[1][1].state == CellState::X && grid[2][1].state == CellState::X) enemy.hasWon = true;
+  if(grid[0][2].state == CellState::X && grid[1][2].state == CellState::X && grid[2][2].state == CellState::X) enemy.hasWon = true;
+
+  //Checks enemy mark diagonally
+  if(grid[0][0].state == CellState::X && grid[1][1].state == CellState::X && grid[2][2].state == CellState::X) enemy.hasWon = true;
+  if(grid[0][2].state == CellState::X && grid[1][1].state == CellState::X && grid[2][0].state == CellState::X) enemy.hasWon = true;
 
 }
 
@@ -151,9 +209,12 @@ int main() {
 
   Grid grid;
   GameState gameState = GameState::Playing;
+  Player player;
+  Enemy enemy;
 
   CreateGrid(grid);
-
+  player.mark = CanMark::cannotMark;
+  enemy.mark = CanMark::canMark;
 
   while(!WindowShouldClose()) {
     BeginDrawing();
@@ -163,9 +224,22 @@ int main() {
     //Rectangle gameButton = DrawGameStartButton(halfScreenWidth, halfScreenHeight, grid);
 
     DrawRecGrid(grid);
-    RecInteract(grid, pointer);
-    //Opponent(grid);
+    gameTurn(player, enemy);
+    if(player.mark == CanMark::canMark) {
+        RecInteract(grid, pointer, player);
+    }
+    if(enemy.mark == CanMark::canMark) {
+        Opponent(grid, enemy);
+    }
     DrawSymbol(grid);
+    winCondition(grid, enemy, player);
+
+    if(player.hasWon == true) {
+      DrawText("Player has Won", halfScreenWidth, halfScreenHeight, 200, BLUE);
+    }
+    if(enemy.hasWon == true) {
+      DrawText("Enemey has Won", halfScreenWidth, halfScreenHeight, 200, BLUE);
+    }
 
     EndDrawing(); 
   }
