@@ -2,6 +2,8 @@
 #include <array>
 #include <optional>
 #include <cstdlib>
+#include <vector>
+#include <utility>
 
 constexpr int CELLHEIGHT = 3;
 constexpr int CELLWIDTH = 3;
@@ -35,13 +37,7 @@ struct CellPos {
   size_t x;
 };
 
-struct Player {
-  CanMark mark;
-  bool alreadyMarked;
-  bool hasWon;
-};
-
-struct Enemy {
+struct Actor {
   CanMark mark;
   bool alreadyMarked;
   bool hasWon;
@@ -112,7 +108,7 @@ void ChangeState(CellPos pos, Grid& grid, CellState state) {
 }
 
 //Pointer interactivity
-void RecInteract(Grid& grid, Vector2 pointer, Player& player) {
+void RecInteract(Grid& grid, Vector2 pointer, Actor& player) {
   auto hover = GetCollisionHover(grid, pointer);
   if(hover.has_value()) {
     CellPos Cps = hover.value();
@@ -129,29 +125,30 @@ void RecInteract(Grid& grid, Vector2 pointer, Player& player) {
 //Opponent/Simple AI
 /*------------------------------------------------*/
 
-//Checks valid positions for mark placement
-std::optional<CellPos> CheckValidMarkPos(const Grid& grid) {
+//Gets Random empty position
+CellPos GetRandomPos(const Grid& grid) {
+  std::vector<std::pair<size_t, size_t>> positions;
   for(size_t y = 0; y < grid.size(); y++) {
     for(size_t x = 0; x < grid.size(); x++) {
       if(grid[y][x].state == CellState::Empty) {
-        return CellPos { y, x };
+        positions.push_back({y, x});
       }
     }
   }
-  return std::nullopt;
+  auto pos  = positions[rand() % positions.size()];
+  return CellPos { pos.first, pos.second};
 }
 
-
 //AI position function
-void Opponent(Grid& grid, Enemy& enemy) {
+void Opponent(Grid& grid, Actor& enemy) {
   CellState cellMark = CellState::X;
-  auto cellMarkPos = CheckValidMarkPos(grid);
+  CellPos pos = GetRandomPos(grid);
 
-  if(cellMarkPos.has_value()) ChangeState(*cellMarkPos, grid, cellMark);
+  ChangeState(pos, grid, cellMark);
   enemy.alreadyMarked = true;
 }
 
-void gameTurn(Player& player, Enemy& enemy) {
+void gameTurn(Actor& player, Actor& enemy) {
   if(enemy.alreadyMarked == true) {
     enemy.mark = CanMark::cannotMark;
     enemy.alreadyMarked = false;
@@ -167,7 +164,7 @@ void gameTurn(Player& player, Enemy& enemy) {
 }
 
 //function that checks if there is a win
-void winCondition(const Grid& grid, Enemy& enemy, Player& player) {
+void winCondition(const Grid& grid, Actor& enemy, Actor& player) {
   //Checks player mark horizontally
   if(grid[0][0].state == CellState::O && grid[0][1].state == CellState::O && grid[0][2].state == CellState::O) player.hasWon = true;
   if(grid[1][0].state == CellState::O && grid[1][1].state == CellState::O && grid[1][2].state == CellState::O) player.hasWon = true;
@@ -209,8 +206,8 @@ int main() {
 
   Grid grid;
   GameState gameState = GameState::Playing;
-  Player player;
-  Enemy enemy;
+  Actor player;
+  Actor enemy;
 
   CreateGrid(grid);
   player.mark = CanMark::cannotMark;
