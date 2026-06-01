@@ -3,5 +3,5 @@ A simple TicTacToe in C++ using the Raylib library
 
 Build Using
 
-cmake -B . -S build
+cmake -S . -B build
 cmake --build build
