@@ -236,14 +236,17 @@ int main() {
     winCondition(grid, enemy, player);
 
     if(player.hasWon == true) {
-      DrawText("Player has Won", halfScreenWidth, halfScreenHeight, 200, BLUE);
+      DrawText("Player has Won", halfScreenWidth, halfScreenHeight, 50, BLUE);
+      player.mark = CanMark::cannotMark;
+      enemy.mark = CanMark::cannotMark;
     }
     if(enemy.hasWon == true) {
-      DrawText("Enemey has Won", halfScreenWidth, halfScreenHeight, 200, BLUE);
+      DrawText("Enemey has Won", halfScreenWidth, halfScreenHeight, 50, BLUE);
+      player.mark = CanMark::cannotMark;
+      enemy.mark = CanMark::cannotMark;
     }
 
     EndDrawing(); 
   }
   CloseWindow();
-
 }
