@@ -4,9 +4,11 @@
 #include <cstdlib>
 #include <vector>
 #include <utility>
+#include <ctime>
 
 constexpr int CELLHEIGHT = 3;
 constexpr int CELLWIDTH = 3;
+
 
 //Game State
 enum struct GameState {
@@ -196,6 +198,8 @@ void winCondition(const Grid& grid, Actor& enemy, Actor& player) {
 }
 
 int main() {
+  srand(time(0));
+
   const int ScreenWidth = 800;
   const int ScreenHeight = 450;
 
