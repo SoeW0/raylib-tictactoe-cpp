@@ -241,7 +241,12 @@ int main() {
       enemy.mark = CanMark::cannotMark;
     }
     if(enemy.hasWon == true) {
-      DrawText("Enemey has Won", halfScreenWidth, halfScreenHeight, 50, BLUE);
+      DrawText("Enemy has Won", halfScreenWidth, halfScreenHeight, 50, BLUE);
+      player.mark = CanMark::cannotMark;
+      enemy.mark = CanMark::cannotMark;
+    }
+    if(player.hasWon == true && enemy.hasWon == true) {
+      DrawText("Draw", halfScreenWidth, halfScreenHeight, 50, BLUE);
       player.mark = CanMark::cannotMark;
       enemy.mark = CanMark::cannotMark;
     }
