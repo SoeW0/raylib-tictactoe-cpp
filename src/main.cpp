@@ -210,6 +210,22 @@ void resetButton(Grid& grid, Actor& player, Actor& enemy) {
   enemy.mark = CanMark::canMark;
 }
 
+void gameButtonInteract(Vector2 pointer, Rectangle rect, GameScreen& scr) {
+  if(CheckCollisionPointRec(pointer, rect)) {
+    if(IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+      scr = GameScreen::GameScreen;
+    }
+  }
+}
+
+void gameButtonInteract(Vector2 pointer, Rectangle rect) {
+  if(CheckCollisionPointRec(pointer, rect)) {
+    if(IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+      DrawRectangleLinesEx(rect, 5, BLUE);
+    }
+  }
+}
+
 int main() {
   srand(time(0));
 
@@ -224,9 +240,12 @@ int main() {
   InitWindow(ScreenWidth, ScreenHeight, "Tic-Tac-Toe");
 
   Grid grid;
-  GameState gameState = GameState::Playing;
   Actor player;
   Actor enemy;
+  GameState gameState = GameState::GameEnd;
+  Vector2 pointer = GetMousePosition();
+
+  Rectangle gameStartButton = {static_cast<float>(halfScreenWidth - 40), static_cast<float>(halfScreenHeight), 60, 20};
 
   CreateGrid(grid);
   player.mark = CanMark::cannotMark;
@@ -234,11 +253,63 @@ int main() {
 
   while(!WindowShouldClose()) {
 
+    switch(currentScreen) {
+      case GameScreen::StartMenu:
+        gameButtonInteract(pointer, gameStartButton, currentScreen);
+      break;
+      case GameScreen::GameScreen:
+        if(gameState == GameState::GameEnd) currentScreen = GameScreen::EndScreen; 
+      break;
+      case GameScreen::EndScreen:
+      break;
+    }
+
     BeginDrawing();
-    Vector2 pointer = GetMousePosition();
     ClearBackground(BLACK);
     DrawText("Tic-Tac-Toe", halfScreenWidth - 60, halfScreenHeight - 200, 20, GRAY);
 
+    switch(currentScreen) {
+      case GameScreen::StartMenu:
+        DrawRectangleRec(gameStartButton, RAYWHITE);
+        DrawRectangleLinesEx(gameStartButton, 5 ,GRAY);
+        gameButtonInteract(pointer, gameStartButton);
+      break;
+      case GameScreen::GameScreen:
+        DrawRecGrid(grid);
+        gameTurn(player, enemy);
+        if(player.mark == CanMark::canMark) {
+          RecInteract(grid, pointer, player);
+        }
+        if(enemy.mark == CanMark::canMark) {
+          Opponent(grid, enemy);
+        }
+        DrawSymbol(grid);
+        winCondition(grid, enemy, player);
+
+        if(player.hasWon == true) {
+          DrawText("Player has Won", halfScreenWidth, halfScreenHeight, 50, BLUE);
+          player.mark = CanMark::cannotMark;
+          enemy.mark = CanMark::cannotMark;
+          gameState = GameState::GameEnd;
+        }
+        if(enemy.hasWon == true) {
+          DrawText("Enemy has Won", halfScreenWidth, halfScreenHeight, 50, BLUE);
+          player.mark = CanMark::cannotMark;
+          enemy.mark = CanMark::cannotMark;
+          gameState = GameState::GameEnd;
+        }
+      break;
+      case GameScreen::EndScreen:
+        if(player.hasWon == true) {
+          DrawText("Player has Won", halfScreenWidth - 40, halfScreenHeight, 50, BLUE);
+        }
+        if(enemy.hasWon == true) {
+          DrawText("Enemy has Won", halfScreenWidth - 40, halfScreenHeight, 50, BLUE);
+        }
+      break;
+    }
+
+    /*
     DrawRecGrid(grid);
     gameTurn(player, enemy);
     if(player.mark == CanMark::canMark) {
@@ -254,17 +325,15 @@ int main() {
       DrawText("Player has Won", halfScreenWidth, halfScreenHeight, 50, BLUE);
       player.mark = CanMark::cannotMark;
       enemy.mark = CanMark::cannotMark;
+      gameState = GameState::GameEnd;
     }
     if(enemy.hasWon == true) {
       DrawText("Enemy has Won", halfScreenWidth, halfScreenHeight, 50, BLUE);
       player.mark = CanMark::cannotMark;
       enemy.mark = CanMark::cannotMark;
+      gameState = GameState::GameEnd;
     }
-    if(player.hasWon == true && enemy.hasWon == true) {
-      DrawText("Draw", halfScreenWidth, halfScreenHeight, 50, BLUE);
-      player.mark = CanMark::cannotMark;
-      enemy.mark = CanMark::cannotMark;
-    }
+    */
 
     if(IsKeyPressed(KEY_R)) resetButton(grid, player, enemy);
 
