@@ -9,6 +9,11 @@
 constexpr int CELLHEIGHT = 3;
 constexpr int CELLWIDTH = 3;
 
+enum struct GameScreen {
+  StartMenu,
+  GameScreen,
+  EndScreen
+};
 
 //Game State
 enum struct GameState {
@@ -197,8 +202,18 @@ void winCondition(const Grid& grid, Actor& enemy, Actor& player) {
 
 }
 
+void resetButton(Grid& grid, Actor& player, Actor& enemy) {
+  CreateGrid(grid);
+  player = {};
+  enemy = {};
+  player.mark = CanMark::cannotMark;
+  enemy.mark = CanMark::canMark;
+}
+
 int main() {
   srand(time(0));
+
+  GameScreen currentScreen = GameScreen::StartMenu;
 
   const int ScreenWidth = 800;
   const int ScreenHeight = 450;
@@ -218,11 +233,11 @@ int main() {
   enemy.mark = CanMark::canMark;
 
   while(!WindowShouldClose()) {
+
     BeginDrawing();
     Vector2 pointer = GetMousePosition();
     ClearBackground(BLACK);
     DrawText("Tic-Tac-Toe", halfScreenWidth - 60, halfScreenHeight - 200, 20, GRAY);
-    //Rectangle gameButton = DrawGameStartButton(halfScreenWidth, halfScreenHeight, grid);
 
     DrawRecGrid(grid);
     gameTurn(player, enemy);
@@ -250,6 +265,8 @@ int main() {
       player.mark = CanMark::cannotMark;
       enemy.mark = CanMark::cannotMark;
     }
+
+    if(IsKeyPressed(KEY_R)) resetButton(grid, player, enemy);
 
     EndDrawing(); 
   }
