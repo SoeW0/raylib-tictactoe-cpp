@@ -11,7 +11,7 @@ constexpr int CELLWIDTH = 3;
 
 enum struct GameScreen {
   StartMenu,
-  GameScreen,
+  Game,
   EndScreen
 };
 
@@ -210,18 +210,11 @@ void resetButton(Grid& grid, Actor& player, Actor& enemy) {
   enemy.mark = CanMark::canMark;
 }
 
-void gameButtonInteract(Vector2 pointer, Rectangle rect, GameScreen& scr) {
+void gameButtonInteract(Vector2 pointer, const Rectangle& rect, GameScreen& scr) {
   if(CheckCollisionPointRec(pointer, rect)) {
+    DrawRectangleLinesEx(rect, 5, BLUE);
     if(IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
-      scr = GameScreen::GameScreen;
-    }
-  }
-}
-
-void gameButtonInteract(Vector2 pointer, Rectangle rect) {
-  if(CheckCollisionPointRec(pointer, rect)) {
-    if(IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
-      DrawRectangleLinesEx(rect, 5, BLUE);
+      scr = GameScreen::Game;
     }
   }
 }
@@ -242,17 +235,20 @@ int main() {
   Grid grid;
   Actor player;
   Actor enemy;
-  GameState gameState = GameState::GameEnd;
-  Vector2 pointer = GetMousePosition();
+  GameState gameState = GameState::Playing;
 
-  Rectangle gameStartButton = {static_cast<float>(halfScreenWidth - 40), static_cast<float>(halfScreenHeight), 60, 20};
+  Rectangle gameStartButton = {static_cast<float>(halfScreenWidth - 100), static_cast<float>(halfScreenHeight), 200, 50};
+  Rectangle letterBox = {static_cast<float>(halfScreenWidth - 240), static_cast<float>(halfScreenHeight - 10), 500, 80};
+  //Rectangle gameStartButton = {220, 120, 100, 50};
 
   CreateGrid(grid);
   player.mark = CanMark::cannotMark;
   enemy.mark = CanMark::canMark;
 
   while(!WindowShouldClose()) {
+    Vector2 pointer = GetMousePosition();
 
+    /*
     switch(currentScreen) {
       case GameScreen::StartMenu:
         gameButtonInteract(pointer, gameStartButton, currentScreen);
@@ -263,6 +259,7 @@ int main() {
       case GameScreen::EndScreen:
       break;
     }
+    */
 
     BeginDrawing();
     ClearBackground(BLACK);
@@ -271,10 +268,11 @@ int main() {
     switch(currentScreen) {
       case GameScreen::StartMenu:
         DrawRectangleRec(gameStartButton, RAYWHITE);
+        DrawText("Start Game", halfScreenWidth - 70, halfScreenWidth - 160, 20, GRAY);
         DrawRectangleLinesEx(gameStartButton, 5 ,GRAY);
-        gameButtonInteract(pointer, gameStartButton);
+        gameButtonInteract(pointer, gameStartButton, currentScreen);
       break;
-      case GameScreen::GameScreen:
+      case GameScreen::Game:
         DrawRecGrid(grid);
         gameTurn(player, enemy);
         if(player.mark == CanMark::canMark) {
@@ -287,24 +285,28 @@ int main() {
         winCondition(grid, enemy, player);
 
         if(player.hasWon == true) {
-          DrawText("Player has Won", halfScreenWidth, halfScreenHeight, 50, BLUE);
           player.mark = CanMark::cannotMark;
           enemy.mark = CanMark::cannotMark;
           gameState = GameState::GameEnd;
         }
         if(enemy.hasWon == true) {
-          DrawText("Enemy has Won", halfScreenWidth, halfScreenHeight, 50, BLUE);
           player.mark = CanMark::cannotMark;
           enemy.mark = CanMark::cannotMark;
           gameState = GameState::GameEnd;
         }
+
+        if(gameState == GameState::GameEnd) currentScreen = GameScreen::EndScreen; 
       break;
       case GameScreen::EndScreen:
         if(player.hasWon == true) {
-          DrawText("Player has Won", halfScreenWidth - 40, halfScreenHeight, 50, BLUE);
+          DrawRectangleRec(letterBox, RAYWHITE);
+          DrawRectangleLinesEx(letterBox, 10, GRAY);
+          DrawText("Player has Won", halfScreenWidth - 190, halfScreenHeight, 50, BLUE);
         }
         if(enemy.hasWon == true) {
-          DrawText("Enemy has Won", halfScreenWidth - 40, halfScreenHeight, 50, BLUE);
+          DrawRectangleRec(letterBox, RAYWHITE);
+          DrawRectangleLinesEx(letterBox, 10, GRAY);
+          DrawText("Enemy has Won", halfScreenWidth - 170, halfScreenHeight, 50, BLUE);
         }
       break;
     }
